@@ -1,0 +1,110 @@
+---
+- name: Instalar Jenkins com Java 21 (Temurin)
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Instalar dependências básicas
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - fontconfig
+          - software-properties-common
+          - lsb-release
+        state: present
+        update_cache: true
+
+    - name: Criar diretório para keyrings
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    # ==========================================
+    # INSTALAÇÃO DO JAVA 21 (TEMURIN)
+    # ==========================================
+
+    - name: Adicionar chave GPG do Adoptium
+      ansible.builtin.get_url:
+        url: https://packages.adoptium.net/artifactory/api/gpg/key/public
+        dest: /etc/apt/keyrings/adoptium.asc
+        mode: '0644'
+
+    - name: Adicionar repositório Adoptium
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/adoptium.asc]
+          https://packages.adoptium.net/artifactory/deb
+          bookworm main
+        filename: adoptium
+        state: present
+
+    - name: Atualizar cache após adicionar Adoptium
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Instalar Java 21 (Temurin)
+      ansible.builtin.apt:
+        name: temurin-21-jre
+        state: present
+
+    # ==========================================
+    # INSTALAÇÃO DO JENKINS
+    # ==========================================
+
+    - name: Adicionar chave GPG do Jenkins
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+        dest: /etc/apt/keyrings/jenkins.asc
+        mode: '0644'
+
+    - name: Adicionar repositório do Jenkins
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/jenkins.asc]
+          https://pkg.jenkins.io/debian-stable
+          binary/
+        filename: jenkins
+        state: present
+
+    - name: Atualizar cache final
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Instalar Jenkins
+      ansible.builtin.apt:
+        name: jenkins
+        state: present
+
+    # ==========================================
+    # CONFIGURAÇÃO FINAL
+    # ==========================================
+
+    - name: Garantir que Jenkins está ativo
+      ansible.builtin.systemd:
+        name: jenkins
+        state: started
+        enabled: true
+
+    - name: Aguardar Jenkins iniciar na porta 8080
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 8080
+        state: started
+        timeout: 120
+
+    - name: Ler a senha inicial do Jenkins
+      ansible.builtin.command:
+        cmd: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+      changed_when: false
+        #no_log: true
+
+    - name: Exibir senha inicial do Jenkins
+      ansible.builtin.debug:
+        msg: >-
+          Senha inicial do Jenkins:
+          {{ jenkins_password.stdout }}

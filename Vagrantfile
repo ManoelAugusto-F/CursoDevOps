@@ -7,9 +7,10 @@ Vagrant.configure("2") do |config|
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq iptables nftables >/dev/null 2>&1 || true
-    # Garante que nftables não bloqueie tráfego vindo do host-only
+    # Garante que nftables não bloqueie tráfego vindo do host-only (enp0s8) e da rede interna (enp0s9)
     if command -v nft >/dev/null 2>&1; then
       nft add rule inet filter input iifname "enp0s8" accept 2>/dev/null || true
+      nft add rule inet filter input iifname "enp0s9" accept 2>/dev/null || true
     fi
   SHELL
 
@@ -22,10 +23,9 @@ Vagrant.configure("2") do |config|
     # Host-Only: comunicação com web e db
     controle.vm.network "private_network", ip: "192.168.56.100"
 
-    # Bridge: acesso do host e da rede 192.168.1.X
-    controle.vm.network "public_network",
-      ip: "192.168.1.100",
-      bridge: "enp4s0"
+    # Rede Interna: acesso entre as VMs (substitui o Bridge)
+    controle.vm.network "private_network", ip: "192.168.1.100",
+      virtualbox__intnet: "intnet"
 
     # Port forwarding (fallback confiável)
     controle.vm.network "forwarded_port",
@@ -34,8 +34,8 @@ Vagrant.configure("2") do |config|
 
     controle.vm.provider "virtualbox" do |vb|
       vb.name   = "controle"
-      vb.memory = "1024"
-      vb.cpus   = 2
+      vb.memory = "6000"
+      vb.cpus   = 4
       vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
     end
@@ -44,7 +44,10 @@ Vagrant.configure("2") do |config|
       al.install_mode = "apt"
       al.playbook     = "installdocker.yml"
     end
-
+    controle.vm.provision "ansible_local" do |al|
+      al.playbook = "installjenkins.yml"
+      al.install_mode = "apt"
+    end
     controle.vm.provision "shell", inline: COMMON_NET_PROVISION
   end
 
@@ -54,9 +57,10 @@ Vagrant.configure("2") do |config|
   config.vm.define "web" do |web|
     web.vm.hostname = "web"
     web.vm.network "private_network", ip: "192.168.56.101"
-    web.vm.network "public_network",
-      ip: "192.168.1.101",
-      bridge: "enp4s0"
+    
+    # Rede Interna
+    web.vm.network "private_network", ip: "192.168.1.101",
+      virtualbox__intnet: "intnet"
 
     web.vm.provider "virtualbox" do |vb|
       vb.name   = "web"
@@ -75,9 +79,10 @@ Vagrant.configure("2") do |config|
   config.vm.define "db" do |db|
     db.vm.hostname = "db"
     db.vm.network "private_network", ip: "192.168.56.102"
-    db.vm.network "public_network",
-      ip: "192.168.1.102",
-      bridge: "enp4s0"
+    
+    # Rede Interna
+    db.vm.network "private_network", ip: "192.168.1.102",
+      virtualbox__intnet: "intnet"
 
     db.vm.provider "virtualbox" do |vb|
       vb.name   = "db"
