@@ -63,7 +63,7 @@ pipeline {
                     docker rm -f web1 web2 web3 db nginx || true
                     docker compose -f ${COMPOSE_FILE} up -d
 
-                    sleep 5
+                    sleep 10
                     docker compose -f ${COMPOSE_FILE} exec -T nginx curl -I http://localhost || exit 1
 
                     docker compose -f ${COMPOSE_FILE} down
@@ -76,8 +76,8 @@ pipeline {
                 slackSend channel: '#ci-devops', message: "Deploy em produção iniciado...", tokenCredentialId: 'slack-token'
 
                 sh """
-                    docker compose pull
-                    docker compose up -d
+                    docker compose -f ${COMPOSE_FILE} pull
+                    docker compose -f ${COMPOSE_FILE} up -d
                 """
             }
         }
