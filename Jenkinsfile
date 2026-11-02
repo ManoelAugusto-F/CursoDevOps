@@ -54,24 +54,20 @@ pipeline {
                 }
             }
         }
-
-        stage('Test in Containers') {
+      stage('Test in Containers') {
             steps {
                 slackSend channel: '#ci-devops', message: "Subindo containers para testes...", tokenCredentialId: 'slack-token'
 
                 sh """
                     docker rm -f web1 web2 web3 db nginx || true
                     docker compose -f ${COMPOSE_FILE} up -d
-
                     sleep 10
-                    docker compose -f ${COMPOSE_FILE} exec -T nginx curl -I http://localhost || exit 1
-
+                    curl -I http://localhost || exit 1
                     docker compose -f ${COMPOSE_FILE} down
                 """
-            }
-        }
+    }
+}
 
-        stage('Deploy to Production') {
             steps {
                 slackSend channel: '#ci-devops', message: "Deploy em produção iniciado...", tokenCredentialId: 'slack-token'
 
