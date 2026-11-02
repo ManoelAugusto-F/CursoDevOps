@@ -64,7 +64,7 @@ pipeline {
                     docker compose -f ${COMPOSE_FILE} up -d
 
                     sleep 5
-                    curl -I http://localhost || exit 1
+                    docker compose -f ${COMPOSE_FILE} exec -T nginx curl -I http://localhost || exit 1
 
                     docker compose -f ${COMPOSE_FILE} down
                 """
