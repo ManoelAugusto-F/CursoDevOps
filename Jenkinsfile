@@ -54,7 +54,7 @@ pipeline {
                 }
             }
         }
-      stage('Test in Containers') {
+        stage('Test in Containers') {
             steps {
                 slackSend channel: '#ci-devops', message: "Subindo containers para testes...", tokenCredentialId: 'slack-token'
 
