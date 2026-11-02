@@ -10,11 +10,9 @@ pipeline {
         IMAGE_NGINX = "${env.IMAGE_NGINX}:${TAG}"
 
         COMPOSE_FILE = "${env.COMPOSE_FILE}"
-
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 sh 'echo "Checking out repository..."'
@@ -54,6 +52,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test in Containers') {
             steps {
                 slackSend channel: '#ci-devops', message: "Subindo containers para testes...", tokenCredentialId: 'slack-token'
@@ -65,9 +64,10 @@ pipeline {
                     curl -I http://localhost || exit 1
                     docker compose -f ${COMPOSE_FILE} down
                 """
-    }
-}
+            }
+        }
 
+        stage('Deploy to Production') {
             steps {
                 slackSend channel: '#ci-devops', message: "Deploy em produção iniciado...", tokenCredentialId: 'slack-token'
 
