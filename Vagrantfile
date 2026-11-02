@@ -64,8 +64,8 @@ Vagrant.configure("2") do |config|
 
     web.vm.provider "virtualbox" do |vb|
       vb.name   = "web"
-      vb.memory = "512"
-      vb.cpus   = 2
+      vb.memory = "2048"
+      vb.cpus   = 4
       vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
     end
