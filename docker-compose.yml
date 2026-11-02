@@ -4,7 +4,7 @@ services:
     build:
       dockerfile: Dockerfilenginx
       context: .
-    image: manoelast/nginx:latest
+    image: manoelasf/nginx:latest
     container_name: nginx
     ports:
       - "80:80"
@@ -19,7 +19,7 @@ services:
     build:
       dockerfile: Dockerfiledb
       context: .
-    image: manoelast/db:latest
+    image: manoelasf/db:latest
     container_name: db
     networks:
       - redelab
@@ -30,7 +30,7 @@ services:
     build:
       dockerfile: Dockerfileweb
       context: .
-    image: manoelast/web:latest
+    image: manoelasf/web:latest
     container_name: web1
     ports:
       - "8081:80"
@@ -40,7 +40,7 @@ services:
       - db
 
   web2:
-    image: manoelast/web:latest
+    image: manoelasf/web:latest
     container_name: web2
     ports:
       - "8082:80"
@@ -50,7 +50,7 @@ services:
       - db
 
   web3:
-    image: manoelast/web:latest
+    image: manoelasf/web:latest
     container_name: web3
     ports:
       - "8083:80"
