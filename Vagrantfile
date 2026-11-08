@@ -32,6 +32,12 @@ Vagrant.configure("2") do |config|
       guest: 8080, host: 8080, host_ip: "127.0.0.1",
       auto_correct: true
 
+    # --- CORREÇÃO AQUI: Adicionado port forwarding para o InfluxDB (8086) ---
+    controle.vm.network "forwarded_port",
+      guest: 8086, host: 8086, host_ip: "127.0.0.1",
+      auto_correct: true
+    # ------------------------------------------------------------------------
+
     controle.vm.provider "virtualbox" do |vb|
       vb.name   = "controle"
       vb.memory = "6000"
